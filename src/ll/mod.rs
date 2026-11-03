@@ -15,6 +15,7 @@ use std::time::SystemTime;
 pub(crate) use reply::ResponseData;
 pub(crate) use reply::ResponseEmpty;
 pub(crate) use reply::ResponseErrno;
+pub(crate) use reply::ResponseIoSlices;
 pub(crate) use reply::ResponseIoctl;
 pub(crate) use reply::ResponseSlice;
 pub(crate) use reply::ResponseStruct;

@@ -1,6 +1,9 @@
 # FUSE for Rust - Changelog
 
 ## Unreleased
+* Add `ReplyData::data_vectored()`, which replies with data spread across several buffers in
+  one `writev`, so a filesystem serving a read from several cached buffers need not copy them
+  into a contiguous one first
 * **Breaking:** `Request::uid()` and `Request::gid()` return `Option<u32>`. An idmapped mount
   has no caller ids to report, so there is not always a uid. A filesystem that does not request
   `InitFlags::FUSE_ALLOW_IDMAP` is always given ids and can unwrap

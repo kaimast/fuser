@@ -60,6 +60,14 @@ impl Response for ResponseSlice<'_> {
     }
 }
 
+pub(crate) struct ResponseIoSlices<'a, 'b>(pub(crate) &'a [IoSlice<'b>]);
+
+impl Response for ResponseIoSlices<'_, '_> {
+    fn payload(&self) -> &'_ [IoSlice<'_>] {
+        self.0
+    }
+}
+
 pub(crate) struct ResponseEmpty;
 
 impl Response for ResponseEmpty {
