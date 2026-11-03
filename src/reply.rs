@@ -210,6 +210,13 @@ impl ReplyData {
         self.reply.send_ll(&ll::ResponseSlice(data));
     }
 
+    /// Reply to a request with data spread across several buffers, written in one `writev`
+    /// without first copying them into a contiguous one. The slices and the reply header
+    /// together must not exceed `IOV_MAX` (1024 on Linux).
+    pub fn data_vectored(self, data: &[IoSlice<'_>]) {
+        self.reply.send_ll(&ll::ResponseIoSlices(data));
+    }
+
     /// Reply to a request with the given error code
     pub fn error(self, err: Errno) {
         self.reply.error(err);
@@ -1002,6 +1009,35 @@ mod test {
         });
         let reply: ReplyData = Reply::new(ll::RequestId(0xdeadbeef), sender);
         reply.data(&[0xde, 0xad, 0xbe, 0xef]);
+    }
+
+    #[test]
+    fn reply_data_vectored() {
+        let sender = ReplySender::Assert(AssertSender {
+            expected: vec![
+                0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xef, 0xbe, 0xad, 0xde, 0x00, 0x00,
+                0x00, 0x00, 0xde, 0xad, 0xbe, 0xef,
+            ],
+        });
+        let reply: ReplyData = Reply::new(ll::RequestId(0xdeadbeef), sender);
+        reply.data_vectored(&[
+            IoSlice::new(&[0xde]),
+            IoSlice::new(&[0xad, 0xbe]),
+            IoSlice::new(&[]),
+            IoSlice::new(&[0xef]),
+        ]);
+    }
+
+    #[test]
+    fn reply_data_vectored_empty() {
+        let sender = ReplySender::Assert(AssertSender {
+            expected: vec![
+                0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xef, 0xbe, 0xad, 0xde, 0x00, 0x00,
+                0x00, 0x00,
+            ],
+        });
+        let reply: ReplyData = Reply::new(ll::RequestId(0xdeadbeef), sender);
+        reply.data_vectored(&[]);
     }
 
     #[test]
